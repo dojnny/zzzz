@@ -1,0 +1,177 @@
+// Custom testbench
+
+`timescale 1ns / 1ps
+
+module System_Top_tb;
+	reg i_rst;
+	reg i_clk;
+	wire i_sck;
+	wire i_mosi;
+	wire i_ss_n;
+	wire o_miso;
+	reg [31:0] i_tx_data;
+	reg i_tx_data_valid;
+	reg i_ss_n_en;
+
+// Instantiating out top level of the design
+System_Top dut_System_Top(
+	.i_rst (i_rst),
+	.i_clk (i_clk),
+	.i_sck (i_sck),
+	.i_mosi (i_mosi),
+	.i_ss_n (i_ss_n),
+	.o_miso (o_miso)
+);
+ // Instantiating SPI Master for testing our Complete Setup 
+spi_master #(
+.CPOL (1'b0),
+.CPHA (1'b0),
+.WIDTH (32),
+.LSB (1'b0),
+.BAUD_RATE (8)
+) dut_Spi_Master (
+.i_clk (i_clk),          
+.i_rst (i_rst),  
+.i_miso (),          
+.o_sck (i_sck),           
+.o_mosi (i_mosi),          
+.o_ss_n (i_ss_n),          
+.i_reset (i_rst),         
+.i_ss_n_en (i_ss_n_en),       
+.i_tx_data_valid (i_tx_data_valid), 
+.i_tx_data (i_tx_data),       
+.o_tx_int (),        
+.o_rx_data (),       
+.o_rx_int ()     
+);
+
+  initial begin
+
+    $dumpfile ("System_Top_tb.vcd");
+    $dumpvars (0, System_Top_tb);
+    
+    i_clk = 1'b0;
+    	forever begin
+    		i_clk = ~i_clk; #2.5;
+    	end
+    end
+    
+    //// Reset task to initialize the design 
+    task reset;
+        begin      
+            i_tx_data_valid = 1'b0;
+            i_tx_data = 32'h00000000;
+            i_ss_n_en = 1'b0;
+            i_rst = 1'b0;
+            #10;
+            i_rst = 1'b1;
+            #100;
+            i_rst = 1'b0;            
+        end
+    endtask
+    
+    initial begin 
+        reset();   // Applying reset to the Device
+        #100;
+     
+        // Updating Duty Cycle of PWM Device 1 to "8'h0F" and Final Value of PWM Device 1 to "16'h0000"
+        @(posedge i_clk); 
+        i_ss_n_en = 1'b1;  // Enabling Chipselect to start the transaction 
+        @(posedge i_clk);  
+        i_tx_data_valid = 1'b1; // Providing data to the SPI Master device which sends it serially to SPI Slave Device 
+        i_tx_data = 32'h08_0F_0000;
+        @(posedge i_clk);     
+        i_tx_data_valid = 1'b0;
+        #1400;
+        i_ss_n_en = 1'b0;  // Applying logic 0 to the chipselect since the transaction is completed 
+        #100;
+        
+        // Updating Duty Cycle of PWM Device 2 to "8'h19" and Final Value of PWM Device 2 to "16'h000A"
+        @(posedge i_clk); 
+        i_ss_n_en = 1'b1;  
+        @(posedge i_clk);     
+        i_tx_data_valid = 1'b1;
+        i_tx_data = 32'h18_19_000A;
+        @(posedge i_clk);     
+        i_tx_data_valid = 1'b0;
+        #1400;
+        i_ss_n_en = 1'b0;
+        #100;
+        
+        // Updating Duty Cycle of PWM Device 3 to "8'h40" and Final Value of PWM Device 3 to "16'h0066"
+        @(posedge i_clk); 
+        i_ss_n_en = 1'b1; 
+        @(posedge i_clk);     
+        i_tx_data_valid = 1'b1;
+        i_tx_data = 32'h28_40_0066;
+        @(posedge i_clk);     
+        i_tx_data_valid = 1'b0;
+        #1400;
+        i_ss_n_en = 1'b0;
+        #100;
+        
+        // Updating Duty Cycle of PWM Device 4 to "8'h4B" and Final Value of PWM Device 4 to "16'h04B0"
+        @(posedge i_clk); 
+        i_ss_n_en = 1'b1; 
+        @(posedge i_clk);     
+        i_tx_data_valid = 1'b1;
+        i_tx_data = 32'h38_4B_04B0;
+        @(posedge i_clk);     
+        i_tx_data_valid = 1'b0;
+        #1400;
+        i_ss_n_en = 1'b0;
+        #100;
+        #1500000;
+        
+        // Updating Duty Cycle of PWM Device 1 to "8'h0F" and Final Value of PWM Device 1 to "16'h0000"
+        @(posedge i_clk); 
+        i_ss_n_en = 1'b1;  // Enabling Chipselect to start the transaction 
+        @(posedge i_clk);  
+        i_tx_data_valid = 1'b1; // Providing data to the SPI Master device which sends it serially to SPI Slave Device 
+        i_tx_data = 32'h08_40_0040;
+        @(posedge i_clk);     
+        i_tx_data_valid = 1'b0;
+        #1400;
+        i_ss_n_en = 1'b0;  // Applying logic 0 to the chipselect since the transaction is completed 
+        #100;
+        
+        // Updating Duty Cycle of PWM Device 2 to "8'h19" and Final Value of PWM Device 2 to "16'h000A"
+        @(posedge i_clk); 
+        i_ss_n_en = 1'b1;  
+        @(posedge i_clk);     
+        i_tx_data_valid = 1'b1;
+        i_tx_data = 32'h18_18_0035;
+        @(posedge i_clk);     
+        i_tx_data_valid = 1'b0;
+        #1400;
+        i_ss_n_en = 1'b0;
+        #100;
+        
+        // Updating Duty Cycle of PWM Device 3 to "8'h40" and Final Value of PWM Device 3 to "16'h0066"
+        @(posedge i_clk); 
+        i_ss_n_en = 1'b1; 
+        @(posedge i_clk);     
+        i_tx_data_valid = 1'b1;
+        i_tx_data = 32'h28_18_0040;
+        @(posedge i_clk);     
+        i_tx_data_valid = 1'b0;
+        #1400;
+        i_ss_n_en = 1'b0;
+        #100;
+        
+        // Updating Duty Cycle of PWM Device 4 to "8'h4B" and Final Value of PWM Device 4 to "16'h04B0"
+        @(posedge i_clk); 
+        i_ss_n_en = 1'b1; 
+        @(posedge i_clk);     
+        i_tx_data_valid = 1'b1;
+        i_tx_data = 32'h38_40_0090;
+        @(posedge i_clk);     
+        i_tx_data_valid = 1'b0;
+        #1400;
+        i_ss_n_en = 1'b0;
+        #100;
+        #1000000 $finish;
+        
+  end
+
+endmodule

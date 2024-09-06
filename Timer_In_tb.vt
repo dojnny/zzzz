@@ -1,0 +1,48 @@
+// Custom testbench
+
+`timescale 1ns / 1ps
+
+module Timer_In_tb;
+	localparam Bits = 16;
+    reg clk, reset_n, enable;
+    reg [Bits - 1:0] Final_Value;
+    wire done;
+    
+    // Instantiate UUT
+    Timer_In #(.Bits(Bits)) uut (
+        .clk(clk), 
+        .reset_n(reset_n),
+        .enable(enable),
+        .Final_Value(Final_Value),
+        .done(done)
+    );
+    
+    // Generate clk signal
+    localparam T = 10;
+    always begin
+        clk = 1'b0;
+        #(T / 2);
+        clk = 1'b1;
+        #(T / 2);
+    end
+    
+  initial begin
+
+    $dumpfile ("Timer_In_tb.vcd");
+    $dumpvars (0, Timer_In_tb);
+    
+    // Reset for 2ns
+        reset_n = 1'b0;
+        #2;
+        reset_n = 1'b1;
+        enable = 1'b1;
+        Final_Value = 255;
+        
+        #(Final_Value * T * 3);
+        Final_Value = 49_999;
+        
+        #(Final_Value * T * 2);
+        #5 $finish;
+    end
+    
+endmodule
